@@ -1,0 +1,6 @@
+@FinanceBlockchainAPI_HostAddress = http://localhost:5170
+
+GET {{FinanceBlockchainAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
