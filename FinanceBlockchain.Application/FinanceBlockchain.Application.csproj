@@ -6,4 +6,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\FinanceBlockchain.Domain\FinanceBlockchain.Domain.csproj" />
+  </ItemGroup>
+
 </Project>

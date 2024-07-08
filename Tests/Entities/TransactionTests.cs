@@ -1,6 +1,4 @@
-﻿using System;
-using System.Security.Cryptography;
-using FinanceBlockchain.Domain.Entities;
+﻿using FinanceBlockchain.Domain.Entities;
 using FinanceBlockchain.Tests.Utils;
 using Xunit;
 
