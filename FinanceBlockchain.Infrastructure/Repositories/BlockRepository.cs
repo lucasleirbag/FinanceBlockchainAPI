@@ -38,7 +38,8 @@ namespace FinanceBlockchain.Infrastructure.Repositories
 
         public Block ObterUltimoBloco()
         {
-            return _context.Blocks.OrderByDescending(b => b.Timestamp).FirstOrDefault();
+            return _context.Blocks.OrderByDescending(b => b.Timestamp).FirstOrDefault() ?? throw new InvalidOperationException("Block not found");
         }
+
     }
 }

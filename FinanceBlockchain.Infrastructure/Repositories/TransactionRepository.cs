@@ -38,8 +38,9 @@ namespace FinanceBlockchain.Infrastructure.Repositories
 
         public Transaction ObterPorId(Guid id)
         {
-            return _context.Transactions.Find(id);
+            return _context.Transactions.Find(id) ?? throw new InvalidOperationException("Transaction not found");
         }
+
 
         public IEnumerable<Transaction> ObterPorRemetente(string remetente)
         {

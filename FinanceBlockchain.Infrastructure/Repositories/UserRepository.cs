@@ -38,7 +38,7 @@ namespace FinanceBlockchain.Infrastructure.Repositories
 
         public User ObterPorEmail(string email)
         {
-            return _context.Users.SingleOrDefault(u => u.Email == email);
+            return _context.Users.SingleOrDefault(u => u.Email == email) ?? throw new InvalidOperationException("User not found");
         }
     }
 }

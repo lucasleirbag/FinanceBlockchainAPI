@@ -2,6 +2,7 @@
 using FinanceBlockchain.Domain.Repositories;
 using Moq;
 using System;
+using System.Collections.Generic;
 using Xunit;
 
 public class BlockRepositoryTests

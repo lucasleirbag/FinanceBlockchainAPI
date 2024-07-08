@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\FinanceBlockchain.Domain\FinanceBlockchain.Domain.csproj" />
+    <ProjectReference Include="..\FinanceBlockchain.Infrastructure\FinanceBlockchain.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

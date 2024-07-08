@@ -11,7 +11,7 @@ namespace FinanceBlockchain.Infrastructure.Services
             rsa.ImportParameters(chavePrivada);
 
             var data = Encoding.UTF8.GetBytes(texto);
-            var signedData = rsa.SignData(data, CryptoConfig.MapNameToOID("SHA256"));
+            var signedData = rsa.SignData(data, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
 
             return Convert.ToBase64String(signedData);
         }
@@ -24,7 +24,7 @@ namespace FinanceBlockchain.Infrastructure.Services
             var data = Encoding.UTF8.GetBytes(texto);
             var signedData = Convert.FromBase64String(assinatura);
 
-            return rsa.VerifyData(data, CryptoConfig.MapNameToOID("SHA256"), signedData);
+            return rsa.VerifyData(data, signedData, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
         }
     }
 }
