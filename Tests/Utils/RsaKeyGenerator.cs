@@ -12,4 +12,3 @@ namespace FinanceBlockchain.Tests.Utils
         }
     }
 }
-
