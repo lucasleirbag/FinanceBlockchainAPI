@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FinanceBlockchain.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240708212703_InitialCreate")]
+    [Migration("20240709002815_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
