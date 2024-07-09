@@ -10,19 +10,19 @@ namespace FinanceBlockchain.Infrastructure.Data
         public ApplicationDbContext CreateDbContext(string[] args)
         {
             // Caminho para o appsettings.json
-            var basePath = "/Users/mac/Project/FinanceBlockchainAPI/FinanceBlockchainAPI";
+            var basePath = Path.Combine(Directory.GetCurrentDirectory(), "../FinanceBlockchainAPI");
             var configuration = new ConfigurationBuilder()
                 .SetBasePath(basePath)
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
                 .AddEnvironmentVariables()
                 .Build();
 
-            var builder = new DbContextOptionsBuilder<ApplicationDbContext>();
+            var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
             var connectionString = configuration.GetConnectionString("DefaultConnection");
 
-            builder.UseSqlServer(connectionString);
+            optionsBuilder.UseSqlServer(connectionString);
 
-            return new ApplicationDbContext(builder.Options);
+            return new ApplicationDbContext(optionsBuilder.Options);
         }
     }
 }

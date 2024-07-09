@@ -15,7 +15,11 @@ builder.Services.AddSwaggerGen(c =>
 
 // Configuração do DbContext
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"), sqlOptions =>
+    {
+        sqlOptions.EnableRetryOnFailure();
+        sqlOptions.CommandTimeout(60); // Defina o tempo limite do comando em segundos, se necessário
+    }));
 
 // Adicionar serviços externos
 builder.Services.AddScoped<EncryptionService>();

@@ -1,14 +1,17 @@
-﻿using System.Security.Cryptography;
+﻿using System;
+using System.IO;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace FinanceBlockchain.Infrastructure.Services
 {
     public class EncryptionService
     {
-        private const int KeySize = 256; // 256 bits
-        private const int IvSize = 16; // 128 bits
+        private const int KeySize = 32; // 256 bits (32 bytes)
+        private const int IvSize = 12; // 96 bits (12 bytes) para GCM
+        private const int TagSize = 16; // 128 bits (16 bytes) para GCM
+        private const int SaltSize = 16; // 128 bits (16 bytes)
         private const int Iterations = 10000; // Número de iterações para derivar a chave
-        private const int SaltSize = 16; // 128 bits
 
         public string Criptografar(string texto, string senha)
         {
@@ -19,21 +22,20 @@ namespace FinanceBlockchain.Infrastructure.Services
 
             var salt = GenerateSalt();
             var key = DeriveKey(senha, salt);
+            var iv = GenerateIV();
+            var plaintextBytes = Encoding.UTF8.GetBytes(texto);
 
-            using var aesAlg = Aes.Create();
-            aesAlg.Key = key;
-            aesAlg.GenerateIV();
-            var iv = aesAlg.IV;
+            using var aesGcm = new AesGcm(key);
+            var ciphertext = new byte[plaintextBytes.Length];
+            var tag = new byte[TagSize];
 
-            using var encryptor = aesAlg.CreateEncryptor(aesAlg.Key, iv);
+            aesGcm.Encrypt(iv, plaintextBytes, ciphertext, tag);
+
             using var msEncrypt = new MemoryStream();
-            using (var csEncrypt = new CryptoStream(msEncrypt, encryptor, CryptoStreamMode.Write))
-            using (var swEncrypt = new StreamWriter(csEncrypt))
-            {
-                msEncrypt.Write(salt, 0, salt.Length);
-                msEncrypt.Write(iv, 0, iv.Length);
-                swEncrypt.Write(texto);
-            }
+            msEncrypt.Write(salt, 0, salt.Length);
+            msEncrypt.Write(iv, 0, iv.Length);
+            msEncrypt.Write(tag, 0, tag.Length);
+            msEncrypt.Write(ciphertext, 0, ciphertext.Length);
 
             return Convert.ToBase64String(msEncrypt.ToArray());
         }
@@ -45,39 +47,66 @@ namespace FinanceBlockchain.Infrastructure.Services
                 throw new ArgumentException("A senha deve ter no mínimo 32 caracteres.", nameof(senha));
             }
 
-            var fullCipher = Convert.FromBase64String(textoCriptografado);
+            try
+            {
+                var fullCipher = Convert.FromBase64String(textoCriptografado);
 
-            using var msDecrypt = new MemoryStream(fullCipher);
-            var salt = new byte[SaltSize];
-            msDecrypt.Read(salt, 0, salt.Length);
+                using var msDecrypt = new MemoryStream(fullCipher);
+                var salt = new byte[SaltSize];
+                var iv = new byte[IvSize];
+                var tag = new byte[TagSize];
 
-            var key = DeriveKey(senha, salt);
+                if (msDecrypt.Read(salt, 0, salt.Length) != salt.Length)
+                {
+                    throw new CryptographicException("Salt inválido.");
+                }
 
-            var iv = new byte[IvSize];
-            msDecrypt.Read(iv, 0, iv.Length);
+                if (msDecrypt.Read(iv, 0, iv.Length) != iv.Length)
+                {
+                    throw new CryptographicException("IV inválido.");
+                }
 
-            using var aesAlg = Aes.Create();
-            aesAlg.Key = key;
-            aesAlg.IV = iv;
+                if (msDecrypt.Read(tag, 0, tag.Length) != tag.Length)
+                {
+                    throw new CryptographicException("Tag inválida.");
+                }
 
-            using var decryptor = aesAlg.CreateDecryptor(aesAlg.Key, aesAlg.IV);
-            using var csDecrypt = new CryptoStream(msDecrypt, decryptor, CryptoStreamMode.Read);
-            using var srDecrypt = new StreamReader(csDecrypt);
+                var key = DeriveKey(senha, salt);
+                var ciphertextBytes = new byte[msDecrypt.Length - salt.Length - iv.Length - tag.Length];
+                msDecrypt.Read(ciphertextBytes, 0, ciphertextBytes.Length);
 
-            return srDecrypt.ReadToEnd();
+                var plaintextBytes = new byte[ciphertextBytes.Length];
+                using var aesGcm = new AesGcm(key);
+                aesGcm.Decrypt(iv, ciphertextBytes, tag, plaintextBytes);
+
+                return Encoding.UTF8.GetString(plaintextBytes);
+            }
+            catch (Exception ex) when (ex is FormatException || ex is CryptographicException)
+            {
+                throw new CryptographicException("Texto criptografado inválido ou erro ao descriptografar os dados.", ex);
+            }
         }
 
         private byte[] GenerateSalt()
         {
             var salt = new byte[SaltSize];
-            RandomNumberGenerator.Fill(salt);
+            using var rng = RandomNumberGenerator.Create();
+            rng.GetBytes(salt);
             return salt;
+        }
+
+        private byte[] GenerateIV()
+        {
+            var iv = new byte[IvSize];
+            using var rng = RandomNumberGenerator.Create();
+            rng.GetBytes(iv);
+            return iv;
         }
 
         private byte[] DeriveKey(string senha, byte[] salt)
         {
             using var rfc2898DeriveBytes = new Rfc2898DeriveBytes(senha, salt, Iterations, HashAlgorithmName.SHA256);
-            return rfc2898DeriveBytes.GetBytes(KeySize / 8);
+            return rfc2898DeriveBytes.GetBytes(KeySize);
         }
     }
 }
